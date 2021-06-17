@@ -6,11 +6,10 @@ BADWORDS_LINK = 'https://www.cs.cmu.edu/~biglou/resources/bad-words.txt'    # co
 
 class FeaturesExtractor():
 	"""
-	Class for dealing with the extraction of features from the input text.
+	Class for dealing with the extraction of engineered features from the input text.
 
 	Args:
-	::param filename; filename of the data to be processed
-	::param path; path where the filename can be found
+	::param text; text to be processed
 	"""
 	def __init__(
 		self, 
@@ -20,13 +19,15 @@ class FeaturesExtractor():
 		self.text = text
 		self.features = text.iloc[:,0:0]						
 
-	######################################################################################
-	#####  FEATURE ENGINEERING
 
 	"""
-	Function to apply feature engineering on the loaded data. It involves 
+	Method that applies feature engineering on the loaded data. It may involve several operations 
+	that are applied in the order as requested in the features list.
+
+	::param features_list; list of features to extract from the text
 	"""
-	def apply_feature_engineering(self, 
+	def extract(
+		self, 
 		features_list: list = []
 	):
 		if not features_list:
@@ -53,23 +54,41 @@ class FeaturesExtractor():
 		log.info(' > FEATURE ENGINEERING > completed')
 		return self
 
+	'''
+	Method to extract word counts that involve explicit offense or that have toxicity in them. 
+	'''
 	def extract_badwords(self):
 		html_doc = requests.get(BADWORDS_LINK)
 		badwords = html_doc.text.split('\n')[1:-1]
 		return self.text.apply(lambda x: sum(1 for word in x.split(' ') if word in badwords))
 
+	'''
+	Method that extracts the sentence length as a measure of the number of letters.
+	'''
 	def extract_sentence_length(self):
 		return self.text.apply(len)
 
+	'''
+	Method that extracts the amount of exclamation marks in the sentence.
+	'''
 	def extract_exclamation_marks(self):
 		return self.text.apply(lambda x: len(x.split('!'))-1)
 
-	def extract_exclamation_marks(self):
+	'''
+	Method that extracts the amount of interrogation marks in the sentence.
+	'''
+	def extract_interrogation_marks(self):
 		return self.text.apply(lambda x: len(x.split('?'))-1)
 
+	'''
+	Method that extracts the amount of upper words in the sentence.
+	'''
 	def extract_upper_words(self):
 		return self.text.apply(lambda x: sum(1 for word in x.split(' ') if word.isupper()))
 
+	'''
+	Method that extracts the amount of upper letters in the sentence.
+	'''
 	def extract_upper_letters(self):
 		return self.text.apply(lambda x: sum(1 for letter in x if letter.isupper()))
 

@@ -6,8 +6,8 @@ from ./engineering import FeaturesExtractor
 
 class Preprocessor():
 	"""
-	Class for dealing with the cleaning of the data, whether it is the training set or the test set. 
-	It stores preprocessing functions to be applied to the features or labels separately.
+	Class for dealing with the general preprocessing of the data. It stores preprocessing methods 
+	that can recall either the cleaning or the feature engineering process. 
 
 	Args:
 	::param filename; filename of the data to be processed
@@ -26,8 +26,11 @@ class Preprocessor():
 		labels = self.df.iloc[:,1:]								
 		self.labels = labels if labels.shape[1]!=0 else None
 
+	######################################################################################
+    ######### PREPROCESSING METHODS
+
 	"""
-	Function to apply feature engineering on the loaded data. It involves 
+	Method to apply feature engineering on the loaded data. 
 	"""
 	def apply_feature_engineering(
 		self, 
@@ -36,18 +39,43 @@ class Preprocessor():
 		self.features = FeatureExtractor(self.text).extract(features_list)
 		return self
 
+	"""
+	Method to apply text cleaning on the loaded data. 
+	"""
+	def apply_text_cleaning(
+		self, 
+		operations_list: list = []
+	):
+		self.text = TextCleaner(self.text).brush(operations_list)
+		return self
+
+    ######################################################################################
+    ######### GETTER METHODS
+
+	"""
+	Getter method for the variable containing the entire dataframe.
+	"""
 	@property
 	def data(self):
 		return self.df if self.df else None
 
+	"""
+	Getter method for the variable containing the textual data.
+	"""
 	@property
 	def text(self):
 		return self.text if self.text else None
 
+	"""
+	Getter method for the variable containing the features engineered from the data.
+	"""
 	@property
 	def features(self):
 		return self.features if self.features else None
 
+	"""
+	Getter for the variable containing the data labels.
+	"""
 	@property
 	def labels(self):
 		return self.labels if self.labels else None
