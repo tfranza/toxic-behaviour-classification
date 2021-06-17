@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 
 from ./engineering import FeaturesExtractor
+from ./cleaning import TextCleaner
 
 class Preprocessor():
 	"""
@@ -20,24 +21,17 @@ class Preprocessor():
 	):
 		super().__init__(self)
 		self.df = pd.read_csv(pathfile + filename, index_col=0)		
-
 		self.text = self.df.iloc[:,[0]]						
-		self.features = self.df.iloc[:,0:0]
 		labels = self.df.iloc[:,1:]								
 		self.labels = labels if labels.shape[1]!=0 else None
+		
+		self.X = df.iloc[:,[0]].values
+		self.y = df.iloc[:,1:].values
+
+		self.features = self.df.iloc[:,0:0]
 
 	######################################################################################
     ######### PREPROCESSING METHODS
-
-	"""
-	Method to apply feature engineering on the loaded data. 
-	"""
-	def apply_feature_engineering(
-		self, 
-		features_list: list = []
-	):
-		self.features = FeatureExtractor(self.text).extract(features_list)
-		return self
 
 	"""
 	Method to apply text cleaning on the loaded data. 
@@ -47,6 +41,16 @@ class Preprocessor():
 		operations_list: list = []
 	):
 		self.text = TextCleaner(self.text).brush(operations_list)
+		return self
+
+	"""
+	Method to apply feature engineering on the loaded data. 
+	"""
+	def apply_feature_engineering(
+		self, 
+		features_list: list = []
+	):
+		self.features = FeatureExtractor(self.text).extract(features_list)
 		return self
 
     ######################################################################################
