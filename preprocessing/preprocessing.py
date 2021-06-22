@@ -1,87 +1,73 @@
 
+import numpy as np
 import pandas as pd
 import requests
 
-from ./engineering import FeaturesExtractor
-from ./cleaning import TextCleaner
+from preprocessing.engineering import FeaturesExtractor
+from preprocessing.cleaning import TextCleaner
 
-class Preprocessor():
-    """
+class Preprocessor:
+    '''
     Class for dealing with the general preprocessing of the data. It stores preprocessing methods 
     that can recall either the cleaning or the feature engineering process. 
+    '''
 
-    Args:
-    ::param filename; filename of the data to be processed
-    ::param pathfile; path where the filename can be found
-    """
-    def __init__(
-        self, 
-        filename: str = '', 
-        pathfile: str = 'data/'
-    ):
-        super().__init__(self)
-        self.df = pd.read_csv(pathfile + filename, index_col=0)		
-        self.text = self.df.iloc[:,[0]]						
-        labels = self.df.iloc[:,1:]								
-        self.labels = labels if labels.shape[1]!=0 else None
+    def __init__(self, filename: str, pathfile: str = 'data/'):
+        '''
+        Builder. Assigns the sklearn model and the name of the model to the corresponding homonimous class attributes.
         
-        self.X = df.iloc[:,[0]].values
-        self.y = df.iloc[:,1:].values
+        :param filename: filename of the data to be processed.
+        :param pathfile: path where the filename can be found.
+        '''
+        super(Preprocessor, self).__init__()
 
-        self.features = self.df.iloc[:,0:0]
+        print(f'\n > LOADING DATA from {pathfile}{filename} ...')
 
-    ######################################################################################
-    ######### PREPROCESSING METHODS
+        self.df = pd.read_csv(pathfile + filename, index_col=0)
+        self.text = self.df.iloc[:,0]
+        labels = self.df.iloc[:,1:]						
+        self.labels = labels.values if labels.shape[1]!=0 else None
 
-    """
-    Method to apply text cleaning on the loaded data. 
-    """
-    def apply_text_cleaning(
-        self, 
-        operations_list: list = []
-    ):
-        self.text = TextCleaner(self.text).brush(operations_list)
-        return self
 
-    """
-    Method to apply feature engineering on the loaded data. 
-    """
-    def apply_feature_engineering(
-        self, 
-        features_list: list = []
-    ):
-        self.features = FeatureExtractor(self.text).extract(features_list)
-        return self
+    ###################################################
+    ##### PREPROCESSING OPERATIONS
 
-    ######################################################################################
-    ######### GETTER METHODS
+    def preprocess(self, cleaning_operations:list, features_to_extract:list) -> tuple:
+        '''
+        Preprocesses the text going through both text cleaning and feature engineering.
 
-    """
-    Getter method for the variable containing the entire dataframe.
-    """
-    @property
-    def data(self):
-        return self.df if self.df else None
+        :param cleaning_operations: list of cleaning operations to apply on the data.
+        :param features_to_extract: list of features to extract from the textual source.
 
-    """
-    Getter method for the variable containing the textual data.
-    """
-    @property
-    def text(self):
-        return self.text if self.text else None
+        :attr features: the engineered features after having cleaned the dataset.
+        :attr labels: the labels.
 
-    """
-    Getter method for the variable containing the features engineered from the data.
-    """
-    @property
-    def features(self):
-        return self.features if self.features else None
+        :return: the preprocessed dataset.
+        '''
+        self.apply_text_cleaning(cleaning_operations)
+        self.apply_feature_engineering(features_to_extract)
+        return self.features[1:], self.labels
 
-    """
-    Getter for the variable containing the data labels.
-    """
-    @property
-    def labels(self):
-        return self.labels if self.labels else None
+    def apply_text_cleaning(self, operations: list):
+        '''
+        Generates an instance of the `TextCleaner` class and applies text cleaning on the loaded data using the list of operations.
+
+        :param operations: list of cleaning operations to apply on the data.
+        :attr text: text to clean.
+        '''
+        cleaner = TextCleaner(self.text)
+        cleaner.brush(operations)
+        self.text = cleaner.updated_text
+
+    def apply_feature_engineering(self, features: list):
+        '''
+        Generates an instance of the `FeatureExtractor` class and applies feature extraction on the loaded data using the list of features.
+
+        :param features: list of features to extract from the data.
+        :attr text: text which to extract features from.
+        '''
+        extractor = FeaturesExtractor(self.text)
+        extractor.extract(features)
+        self.features = extractor.features
 
 
