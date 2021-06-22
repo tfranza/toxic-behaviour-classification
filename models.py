@@ -28,7 +28,7 @@ class SklearnSupervisedModel:
         self.model = model
         self.name = name
 
-    def fit(self, train_X: np.array, train_Y: np.array):
+    def train(self, train_X: np.array, train_Y: np.array):
         '''
         Fits the classifier to the training set. Updates the :attr: `model`.
     
@@ -38,29 +38,21 @@ class SklearnSupervisedModel:
         self.trainset = (train_X, train_Y)
         self.model.fit(train_X, train_Y)
 
-    def predict(self, test_X: np.array):
+    def eval(self, test_X: np.array, test_Y: np.array, save_eval: bool=True, verbose: bool=True) -> dict:
         '''
-        Predicts labels from the features using the :attr: `model`.
+        Predicts labels from the features using the :attr: `model` and evaluates them against the real labels.
         
         :param test_X: features of the validation set.
-        :attr model: trained sklearn model.
-        '''
-        self.testset = (test_X, None)
-        self.pred = self.model.predict(test_X)
-
-    def eval(self, test_Y: np.array, save_eval: bool, verbose: bool=True) -> dict:
-        '''
-        Evaluates the predictions obtained from the classifier with the real labels.
-        
         :param test_Y: labels of the validation set.
         :param save_eval: True if we want to dump the metrics.
         :attr name: name of the used sklearn model.  
 
         :return: metrics adopted for the evaluation task.
         '''
-        self.testset = (self.testset[0], test_Y)
+        self.testset = (test_X, test_Y)
         self.metrics = get_metrics(FEATURES, test_Y, self.pred)
-        
+
+        self.pred = self.model.predict(test_X)
         if verbose:
             for i, label in enumerate(self.metrics['name']):
                 acc = self.metrics['acc'][i]
@@ -81,7 +73,7 @@ class SklearnSupervisedModel:
                 json.dump(self.metrics, handle)
         return self.metrics
 
-    def save(self):
+    def save_model(self):
         '''
         Saves the model.
 

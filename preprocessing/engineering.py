@@ -38,7 +38,7 @@ class FeaturesExtractor:
         else:
             print('\n > FEATURE ENGINEERING')
 
-        self.features = np.zeros(shape=(self.text.shape[0],1))
+        self.features = None
         for feature in features:
             print(f'   - {feature} extraction ...')
             if feature == 'n_badwords':
@@ -76,7 +76,7 @@ class FeaturesExtractor:
         badwords = html_doc.text.split('\n')[1:-1]
         f = lambda x: sum(1 for word in x.split(' ') if word in badwords)
         new_features = np.array([f(x) for x in self.text])
-        self.features = np.append(self.features, new_features) 
+        self.add_features(new_features)
 
     def extract_sentence_length(self):
         '''
@@ -87,7 +87,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: len(x)
         new_features = np.array([f(x) for x in self.text])
-        self.features = np.append(self.features, new_features) 
+        self.add_features(new_features)
 
     def extract_n_exclamation_marks(self):
         '''
@@ -98,7 +98,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: len(x.split('!'))-1
         new_features = np.array([f(x) for x in self.text])
-        self.features = np.append(self.features, new_features) 
+        self.add_features(new_features)
 
     def extract_n_interrogation_marks(self):
         '''
@@ -109,7 +109,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: len(x.split('?'))-1
         new_features = np.array([f(x) for x in self.text])
-        self.features = np.append(self.features, new_features) 
+        self.add_features(new_features)
 
     def extract_n_upper_words(self):
         '''
@@ -120,7 +120,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: sum(1 for word in x.split(' ') if word.isupper())
         new_features = np.array([f(x) for x in self.text])
-        self.features = np.append(self.features, new_features) 
+        self.add_features(new_features)
 
     def extract_n_upper_letters(self):
         '''
@@ -131,11 +131,11 @@ class FeaturesExtractor:
         '''
         f = lambda x: sum(1 for letter in x if letter.isupper())
         new_features = np.array([f(x) for x in self.text])
-        self.features = np.append(self.features, new_features) 
+        self.add_features(new_features)
 
     def extract_word_counts_tfidf(self, feature_type: str = 'counts'):
         '''
-        Method that extracts the word counts/tfidf for each word in the data. The amount of words is limited by the 
+        Extracts the word counts/tfidf for each word in the data. The amount of words is limited by the 
         MAX_COUNT_FEATURES variable. The vectorizer will try to fit only on the training data.
         
         :param feature_type: type of feature to extract from the text. Allowed values: 'counts', 'tfidf'
@@ -146,12 +146,13 @@ class FeaturesExtractor:
         vectorizer = None 
         word_features = None
         try:		# vectorizer already generated		
-            with open(f'resources/{feature_type}_vectorizer.pickle', 'rb') as handle:
+            with open(f'resources/{feature_type}_vectorizer', 'rb') as handle:
                 vectorizer = pickle.load(handle)
             word_features = vectorizer.transform(self.text)
+            self.add_features(word_features)
         except:		# vectorizer not yet generated
             if self.test:
-                log.info(f' - {feature_type} vectorizer not found!')		
+                print(f' - {feature_type} vectorizer not found!')		
             else:
                 if feature_type=='counts':
                     vectorizer = CountVectorizer(analyzer='word', max_features=MAX_COUNT_FEATURES)
@@ -160,5 +161,16 @@ class FeaturesExtractor:
                 word_features = vectorizer.fit_transform(self.text)
                 with open(f'resources/{feature_type}_vectorizer', 'wb') as handle:
                     pickle.dump(vectorizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        new_features = word_features
-        self.features = np.append(self.features, new_features) 
+                self.add_features(word_features)
+    
+    def add_features(self, new_features):
+        '''
+        Adds new features to the :attr: `features`.
+        
+        :param new_features: features to be added to the :attr: `features`.
+
+        '''
+        if self.features==None:
+            self.features = new_features
+        else:
+            self.features = np.append(self.features, new_features) 

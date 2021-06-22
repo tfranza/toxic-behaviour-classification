@@ -46,7 +46,7 @@ class Preprocessor:
         '''
         self.apply_text_cleaning(cleaning_operations)
         self.apply_feature_engineering(features_to_extract)
-        return self.features[1:], self.labels
+        return self.features, self.labels
 
     def apply_text_cleaning(self, operations: list):
         '''
