@@ -1,4 +1,6 @@
+
 import json
+import joblib
 import numpy as np
 
 from sklearn.base import ClassifierMixin
@@ -35,8 +37,10 @@ class SklearnSupervisedModel:
         :param train_X: features of the training set.
         :param train_Y: labels associated to the features.
         '''
+        print('   - begin training')
         self.trainset = (train_X, train_Y)
         self.model.fit(train_X, train_Y)
+        print('   - end training')
 
     def eval(self, test_X: np.array, test_Y: np.array, save_eval: bool=True, verbose: bool=True) -> dict:
         '''
@@ -50,23 +54,19 @@ class SklearnSupervisedModel:
         :return: metrics adopted for the evaluation task.
         '''
         self.testset = (test_X, test_Y)
-        self.metrics = get_metrics(FEATURES, test_Y, self.pred)
-
         self.pred = self.model.predict(test_X)
+        self.metrics = get_metrics(FEATURES, test_Y, self.pred)
         if verbose:
             for i, label in enumerate(self.metrics['name']):
                 acc = self.metrics['acc'][i]
                 prec = self.metrics['prec'][i]
                 rec = self.metrics['rec'][i]
                 f1 = self.metrics['f1'][i]
-                print(f' \
-                    Feature = {label}, \
-                    Accuracy = {np.round(acc,5)}, \
-                    Precision = {np.round(prec,5)}, \
-                    Recall = {np.round(rec,5)}, \
-                    F1-score = {np.round(f1,5)}'
-                )
-                print('Confusion Matrix is:\n', self.metrics['cm'][i], '\n')
+                print()
+                print(f'Label: {label}')
+                #print(f'Prec: {np.round(prec,5)}, Rec: {np.round(rec,5)}, F1-score = {np.round(f1,5)}')
+                print('Confusion Matrix:\n', self.metrics['cm'][i])
+            print('\n', self.metrics['report'])
 
         if save_eval:
             with open(f'results/{self.name}', 'w') as handle:
@@ -79,8 +79,18 @@ class SklearnSupervisedModel:
 
         :attr name: name of the used sklearn model.  
         '''
-        with open(f'models/{self.name}.model', 'w') as handle:
-            pickle.dump(self.model, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        joblib.dump(self.model, f'models/{self.name}.model')
+
+    def load_model(self, model_name: str) -> OneVsRestClassifier:
+        '''
+        Loads the model.
+        
+        :param model_name:
+        
+        :return: the fitted model
+        '''
+        self.name = model_name
+        return joblib.load(f'models/{self.name}.model') 
 
 
 class ModelLoader:
@@ -103,21 +113,8 @@ class ModelLoader:
 
         :return: sklearn supervised model initialized.
         '''
-        print(f' > LOADING MODEL {model_name} ...')
+        print(f'\n > LOADING MODEL: {model_name} ...')
         return eval(f'self.{model_name}()')
-
-#        if model_name == 'logreg':
-#            return self.logreg()
-#        elif model_name == 'svc_linear':
-#            return self.svc_linear()
-#        elif model_name == 'svc_poly':
-#            return self.svc_poly()
-#        elif model_name == 'randomforest':
-#            return self.randomforest()
-#        elif model_name == 'xgboost':
-#            return self.xgboost()
-#        else:
-#            print(f'   - {model_name} not found!')
 
 
     ###################################################

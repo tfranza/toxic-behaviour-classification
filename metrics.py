@@ -7,6 +7,8 @@ from sklearn.metrics import recall_score as recall
 from sklearn.metrics import precision_score as precision
 from sklearn.metrics import f1_score
 
+from sklearn.metrics import classification_report 
+
 def get_metrics(labels: list, y_true: np.array, y_pred: np.array) -> dict:
     '''
     Extracts the metrics according to the true labels and the predictions obtained from the classifier.
@@ -21,10 +23,11 @@ def get_metrics(labels: list, y_true: np.array, y_pred: np.array) -> dict:
     for i, label in enumerate(labels): 
         name = name + [label]
         acc = acc + [accuracy(y_true[:,i], y_pred[:,i])]
-        cm = cm + [confusion_matrix(y_true[:,i], y_pred[:,i])]
+        cm = cm + [confusion_matrix(y_true[:,i], y_pred[:,i]).tolist()]
         rec = rec + [recall(y_true[:,i], y_pred[:,i])]
         prec = prec + [precision(y_true[:,i], y_pred[:,i])]
-        f1 = f1 + f1_score(y_true[:,i], y_pred[:,i])
+        f1 = f1 + [f1_score(y_true[:,i], y_pred[:,i])]
+    report = classification_report(y_true, y_pred, target_names=labels)
 
     return dict({
         'name': name,
@@ -32,5 +35,6 @@ def get_metrics(labels: list, y_true: np.array, y_pred: np.array) -> dict:
         'rec': rec,
         'prec': prec,
         'f1': f1,
-        'cm': cm
+        'cm': cm,
+        'report': report
     })
