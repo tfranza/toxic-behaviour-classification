@@ -10,16 +10,17 @@ def train():
     model_name = 'logreg'
 
     prep_cleaning_steps = [
-        'lowering'#,
-#        'abbreviations_removal',
-#        'punctuations_removal',
-#        'numbers_removal',
-#        'stopwords_removal',
-#        'lemmatization',
-#        'spaces_removal'
+        'lowering',
+        #'abbreviations_removal',
+        #'punctuations_removal',
+        #'numbers_removal',
+        #'stopwords_removal',
+        #'lemmatization',
+        'spaces_removal'
     ]
     prep_features_to_be_engineered = [
-        'word_tfidf'
+        'word_tfidf',
+        'n_badwords'
     ]
     
     # loading training set
@@ -35,3 +36,4 @@ def train():
     model.eval(test_X, test_y, save_eval=True)
     model.save_model()
 
+train()

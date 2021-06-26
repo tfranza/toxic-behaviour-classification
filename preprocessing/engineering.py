@@ -72,11 +72,18 @@ class FeaturesExtractor:
         :attr text: textual source which to extract the feature from.
         :attr features: engineered feature matrix to be updated with the new features.
         '''
-        html_doc = requests.get(BADWORDS_LINK)
-        badwords = html_doc.text.split('\n')[1:-1]
-        f = lambda x: sum(1 for word in x.split(' ') if word in badwords)
-        new_features = np.array([f(x) for x in self.text])
-        self.add_features(new_features)
+        try:        # vectorizer already generated      
+            with open(f'resources/badwords', 'rb') as handle:
+                badwords = pickle.load(handle)
+        except:
+            html_doc = requests.get(BADWORDS_LINK)
+            badwords = html_doc.text.split('\n')[1:-1]
+            with open(f'resources/badwords', 'wb') as handle:
+                pickle.dump(badwords, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        finally:
+            f = lambda x: sum(1 for word in x.split(' ') if word in badwords)
+            new_features = np.array([f(x) for x in self.text])
+            self.add_features(new_features.reshape(-1,1))
 
     def extract_sentence_length(self):
         '''
@@ -87,7 +94,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: len(x)
         new_features = np.array([f(x) for x in self.text])
-        self.add_features(new_features)
+        self.add_features(new_features.reshape(-1,1))
 
     def extract_n_exclamation_marks(self):
         '''
@@ -98,7 +105,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: len(x.split('!'))-1
         new_features = np.array([f(x) for x in self.text])
-        self.add_features(new_features)
+        self.add_features(new_features.reshape(-1,1))
 
     def extract_n_interrogation_marks(self):
         '''
@@ -109,7 +116,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: len(x.split('?'))-1
         new_features = np.array([f(x) for x in self.text])
-        self.add_features(new_features)
+        self.add_features(new_features.reshape(-1,1))
 
     def extract_n_upper_words(self):
         '''
@@ -120,7 +127,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: sum(1 for word in x.split(' ') if word.isupper())
         new_features = np.array([f(x) for x in self.text])
-        self.add_features(new_features)
+        self.add_features(new_features.reshape(-1,1))
 
     def extract_n_upper_letters(self):
         '''
@@ -131,7 +138,7 @@ class FeaturesExtractor:
         '''
         f = lambda x: sum(1 for letter in x if letter.isupper())
         new_features = np.array([f(x) for x in self.text])
-        self.add_features(new_features)
+        self.add_features(new_features.reshape(-1,1))
 
     def extract_word_counts_tfidf(self, feature_type: str = 'counts'):
         '''
@@ -173,4 +180,7 @@ class FeaturesExtractor:
         if self.features==None:
             self.features = new_features
         else:
-            self.features = np.append(self.features, new_features) 
+            print(self.features.shape)
+            print(new_features.shape)
+            self.features = np.hstack((self.features, new_features)) 
+            print(self.features.shape)
