@@ -152,23 +152,18 @@ class FeaturesExtractor:
         '''
         vectorizer = None 
         word_features = None
-        try:		# vectorizer already generated		
-            with open(f'resources/{feature_type}_vectorizer', 'rb') as handle:
-                vectorizer = pickle.load(handle)
-            word_features = vectorizer.transform(self.text)
+        if self.test:
+            with open(f'resources/models/{self.name}.model', 'rb') as handle:
+                _, self.vectorizer = pickle.load(handle)
+            word_features = self.vectorizer.transform(self.text)
             self.add_features(word_features)
-        except:		# vectorizer not yet generated
-            if self.test:
-                print(f' - {feature_type} vectorizer not found!')		
-            else:
-                if feature_type=='counts':
-                    vectorizer = CountVectorizer(analyzer='word', max_features=MAX_COUNT_FEATURES)
-                elif feature_type=='tfidf':
-                    vectorizer = TfidfVectorizer(analyzer='word', max_features = MAX_COUNT_FEATURES)
-                word_features = vectorizer.fit_transform(self.text)
-                with open(f'resources/{feature_type}_vectorizer', 'wb') as handle:
-                    pickle.dump(vectorizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
-                self.add_features(word_features)
+        else:
+            if feature_type=='counts':
+                self.vectorizer = CountVectorizer(analyzer='word', max_features=MAX_COUNT_FEATURES)
+            elif feature_type=='tfidf':
+                self.vectorizer = TfidfVectorizer(analyzer='word', max_features = MAX_COUNT_FEATURES)
+            word_features = self.vectorizer.fit_transform(self.text)
+            self.add_features(word_features)
     
     def add_features(self, new_features):
         '''

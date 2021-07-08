@@ -1,7 +1,7 @@
 
 import json
-import joblib
 import numpy as np
+import pickle
 
 from sklearn.base import ClassifierMixin
 from sklearn.multiclass import OneVsRestClassifier
@@ -42,13 +42,12 @@ class SklearnSupervisedModel:
         self.model.fit(train_X, train_Y)
         print('   - end training')
 
-    def eval(self, test_X: np.array, test_Y: np.array, save_eval: bool=True, verbose: bool=True) -> dict:
+    def eval(self, test_X: np.array, test_Y: np.array, verbose: bool=True) -> dict:
         '''
         Predicts labels from the features using the :attr: `model` and evaluates them against the real labels.
         
         :param test_X: features of the validation set.
         :param test_Y: labels of the validation set.
-        :param save_eval: True if we want to dump the metrics.
         :attr name: name of the used sklearn model.  
 
         :return: metrics adopted for the evaluation task.
@@ -68,18 +67,18 @@ class SklearnSupervisedModel:
                 print('Confusion Matrix:\n', self.metrics['cm'][i])
             print('\n', self.metrics['report'])
 
-        if save_eval:
-            with open(f'results/{self.name}', 'w') as handle:
-                json.dump(self.metrics, handle)
+        with open(f'resources/models/{self.name}.results', 'w') as handle:
+            json.dump(self.metrics, handle)
         return self.metrics
 
-    def save_model(self):
+    def save_model(self, vectorizer):
         '''
         Saves the model.
 
         :attr name: name of the used sklearn model.  
         '''
-        joblib.dump(self.model, f'models/{self.name}.model')
+        with open(f'resources/models/{self.name}.model', 'wb') as handle:
+            pickle.dump((self.model, vectorizer), handle)
 
     def load_model(self, model_name: str) -> OneVsRestClassifier:
         '''
@@ -90,7 +89,8 @@ class SklearnSupervisedModel:
         :return: the fitted model
         '''
         self.name = model_name
-        return joblib.load(f'models/{self.name}.model') 
+        with open(f'resources/models/{self.name}.model', 'rb') as handle:
+            self.model, _ = pickle.load(handle)
 
 
 class ModelLoader:
@@ -171,6 +171,7 @@ class ModelLoader:
         model = OneVsRestClassifier(
             SVC(
                 kernel='poly', 
+                degree=2,
                 random_state=self.random_state
             )
         )
@@ -187,7 +188,9 @@ class ModelLoader:
         '''
         model = OneVsRestClassifier(
             RandomForestClassifier(
+                max_depth=40,
                 class_weight='balanced',
+                n_jobs=4,
                 random_state=self.random_state
             )
         )
@@ -204,7 +207,7 @@ class ModelLoader:
         '''
         model = OneVsRestClassifier(
             GradientBoostingClassifier(
-                max_depth=9,
+                max_depth=3,
                 random_state=self.random_state
             )
         )

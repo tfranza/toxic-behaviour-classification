@@ -27,7 +27,7 @@ ABBREVIATIONS_MAPPING = {
 
 PUNCTUATIONS = '.,"`)(:-;][|{}#&%•*/—=\n'
 
-class TextCleaner():
+class TextCleaner:
     '''
     Class for dealing with the cleaning of the data: makes available several methods to do it. 
     '''
@@ -46,7 +46,8 @@ class TextCleaner():
     def brush(self, operations: list):
         """
         Applies the cleaning operations to the loaded data. The cleaning operations are given in input and given their order of appearance 
-        in the list.
+        in the list. The currently implemented operations are the following: lowering, abbreviations_removal, punctuations_removal, 
+        numbers_removal, stopwords_removal, lemmatization, spaces_removal
 
         :param operations_list: list of cleaning operations to apply on text.
         """
@@ -60,22 +61,11 @@ class TextCleaner():
 
         for operation in self.operations:
             print(f'   - applying {operation} ...')
-            if operation == 'lowering':
-                self.lowering()
-            elif operation == 'abbreviations_removal':
-                self.abbreviations_removal()
-            elif operation == 'punctuations_removal':
-                self.punctuations_removal()
-            elif operation == 'numbers_removal':
-                self.numbers_removal()
-            elif operation == 'stopwords_removal':
-                self.stopwords_removal()
-            elif operation == 'lemmatization':
-                self.lemmatization()
-            elif operation == 'spaces_removal':
-                self.spaces_removal()
-            else:
+            try:
+                eval(f'self.{operation}()')
+            except:
                 print(f' - {operation} not found as an option available for selection.')
+                
 
     ###################################################
     ##### CLEANING OPERATIONS
@@ -143,7 +133,16 @@ class TextCleaner():
 
         :attr updated_text: text cleaned in consecutive steps. Initialized as the raw text.
         '''
-        self.updated_text = self.updated_text.map(lambda sent: ' '.join([lemmatizer.lemmatize(word) for word in sent.split()]))
+        self.updated_text = self.updated_text.map(
+            lambda sent: ' '.join(
+                [lemmatizer.lemmatize(word) for word in sent.split()]
+            )
+        )
+        self.updated_text = self.updated_text.map(
+            lambda sent: ' '.join(
+                [lemmatizer.lemmatize(word, 'v') for word in sent.split()]
+            )
+        )
 
     def spaces_removal(self):
         '''

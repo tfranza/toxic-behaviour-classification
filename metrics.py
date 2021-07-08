@@ -19,6 +19,7 @@ def get_metrics(labels: list, y_true: np.array, y_pred: np.array) -> dict:
     
     :return: dictionary of metrics. Each entry value is a list of floats with length equal to the amount of labels. 
     '''    
+        
     name, acc, cm, rec, prec, f1 = [], [], [], [], [], []
     for i, label in enumerate(labels): 
         name = name + [label]
